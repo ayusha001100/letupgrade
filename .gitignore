@@ -1,0 +1,9 @@
+node_modules
+dist
+.DS_Store
+.env
+.firebase
+firestore.rules
+firestore.indexes.json
+firebase.json
+.firebaserc
