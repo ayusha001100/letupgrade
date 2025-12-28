@@ -12,7 +12,9 @@ import {
   onAuthStateChanged,
   signOut,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult
 } from 'firebase/auth';
 import {
   doc,
@@ -28,28 +30,43 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    // Check for redirect result on load
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          const user = result.user;
+          const userRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userRef);
+
+          if (!userDoc.exists()) {
+            await setDoc(userRef, {
+              name: user.displayName,
+              email: user.email,
+              progress: {
+                completedWeeks: [],
+                completedModules: [],
+                quizScores: {}
+              }
+            });
+          }
+        }
+      } catch (err) {
+        setError(err.message.replace('Firebase:', ''));
+      }
+    };
+    checkRedirect();
+  }, []);
+
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError('');
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
     try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      const userRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userRef);
-
-      if (!userDoc.exists()) {
-        await setDoc(userRef, {
-          name: user.displayName,
-          email: user.email,
-          progress: {
-            completedWeeks: [],
-            completedModules: [],
-            quizScores: {}
-          }
-        });
-      }
+      await signInWithRedirect(auth, provider);
     } catch (err) {
       setError(err.message.replace('Firebase:', ''));
       setLoading(false);
@@ -953,7 +970,7 @@ const App = () => {
       <AnimatePresence mode="wait">
         <Routes>
           {!user ? (
-            <Route path="*" element={<Login setUser={setUser} />} />
+            <Route path="*" element={<Login />} />
           ) : (
             <Route path="*" element={
               <>
