@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "lisa-new-lms-tp"
+  },
+  "targets": {
+    "lisa-new-lms-tp": {
+      "hosting": {
+        "gen-ai-program": [
+          "gen-ai-program"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

@@ -8,25 +8,53 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { courseData } from './data/courseData';
+import { auth, db } from './firebase';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from 'firebase/auth';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  onSnapshot
+} from 'firebase/firestore';
 import './index.css';
 
 // --- Authentication Mock ---
-const Login = ({ setUser }) => {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (email && password) {
-      const mockUser = {
-        name: email.split('@')[0],
-        email: email,
-        uid: 'mock-user-id'
-      };
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
-      navigate('/dashboard');
+    setError('');
+    setLoading(true);
+    try {
+      // Try to sign in
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      if (err.code === 'auth/user-not-found') {
+        // If user not found, try to create account
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          await setDoc(doc(db, 'users', userCredential.user.uid), {
+            email: email,
+            name: email.split('@')[0],
+            progress: { completedWeeks: [], completedModules: [], quizScores: {} }
+          });
+        } catch (createErr) {
+          setError(createErr.message.replace('Firebase:', ''));
+        }
+      } else {
+        setError(err.message.replace('Firebase:', ''));
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -94,11 +122,17 @@ const Login = ({ setUser }) => {
           style={{ width: '100%', maxWidth: '440px', padding: '48px', border: '1px solid var(--glass-border)' }}
         >
           <div style={{ marginBottom: '40px' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '12px' }}>Login</h2>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '12px' }}>Welcome</h2>
             <p style={{ color: 'var(--text-muted)' }}>
-              Enter any Gmail and Password to access the program.
+              Enter your Gmail and password to access the AI Fellowship portal.
             </p>
           </div>
+
+          {error && (
+            <div style={{ marginBottom: '24px', padding: '12px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '8px', color: '#f87171', fontSize: '0.875rem' }}>
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div>
@@ -125,8 +159,8 @@ const Login = ({ setUser }) => {
               />
             </div>
 
-            <button type="submit" className="btn-primary" style={{ padding: '16px', fontSize: '1.1rem' }}>
-              Enter Program
+            <button type="submit" disabled={loading} className="btn-primary" style={{ padding: '16px', fontSize: '1.1rem' }}>
+              {loading ? 'Entering...' : 'Enter Program'}
             </button>
           </form>
 
@@ -869,16 +903,30 @@ const App = () => {
   const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    const savedProgress = localStorage.getItem('progress');
     const savedTheme = localStorage.getItem('theme') || 'dark';
-
-    if (savedUser) setUser(JSON.parse(savedUser));
-    if (savedProgress) setProgress(JSON.parse(savedProgress));
-
     setTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
-    setLoading(false);
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        setUser({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          name: firebaseUser.displayName || firebaseUser.email.split('@')[0]
+        });
+
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        if (userDoc.exists() && userDoc.data().progress) {
+          setProgress(userDoc.data().progress);
+        }
+      } else {
+        setUser(null);
+        setProgress({ completedWeeks: [], completedModules: [], quizScores: {} });
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribeAuth();
   }, []);
 
   const toggleTheme = () => {
@@ -889,12 +937,13 @@ const App = () => {
   };
 
   useEffect(() => {
-    localStorage.setItem('progress', JSON.stringify(progress));
-  }, [progress]);
+    if (user && user.uid && user.uid !== 'mock-user-id') {
+      setDoc(doc(db, 'users', user.uid), { progress }, { merge: true });
+    }
+  }, [progress, user]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
+  const handleLogout = async () => {
+    await signOut(auth);
   };
 
   if (loading) return <div style={{ minHeight: '100vh', background: 'var(--background)' }}></div>;
