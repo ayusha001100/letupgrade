@@ -7,69 +7,26 @@ import {
   ExternalLink, ArrowLeft, Trophy, Sun, Moon
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { auth, db } from './firebase';
-import {
-  onAuthStateChanged,
-  signOut,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult
-} from 'firebase/auth';
-import {
-  doc,
-  getDoc,
-  setDoc,
-  onSnapshot
-} from 'firebase/firestore';
 import { courseData } from './data/courseData';
 import './index.css';
 
 // --- Authentication Mock ---
-const Login = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+const Login = ({ setUser }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    // Check for redirect result on load
-    const checkRedirect = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result && result.user) {
-          const user = result.user;
-          const userRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userRef);
-
-          if (!userDoc.exists()) {
-            await setDoc(userRef, {
-              name: user.displayName,
-              email: user.email,
-              progress: {
-                completedWeeks: [],
-                completedModules: [],
-                quizScores: {}
-              }
-            });
-          }
-        }
-      } catch (err) {
-        setError(err.message.replace('Firebase:', ''));
-      }
-    };
-    checkRedirect();
-  }, []);
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    setError('');
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-
-    try {
-      await signInWithRedirect(auth, provider);
-    } catch (err) {
-      setError(err.message.replace('Firebase:', ''));
-      setLoading(false);
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (email && password) {
+      const mockUser = {
+        name: email.split('@')[0],
+        email: email,
+        uid: 'mock-user-id'
+      };
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      setUser(mockUser);
+      navigate('/dashboard');
     }
   };
 
@@ -128,57 +85,53 @@ const Login = () => {
         </div>
       </div>
 
-      {/* Right Side: Google Login Only */}
+      {/* Right Side: Simple Login */}
       <div className="auth-form-side" style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="glass-card"
-          style={{ width: '100%', maxWidth: '440px', padding: '48px', border: '1px solid var(--glass-border)', textAlign: 'center' }}
+          style={{ width: '100%', maxWidth: '440px', padding: '48px', border: '1px solid var(--glass-border)' }}
         >
           <div style={{ marginBottom: '40px' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '12px' }}>Welcome</h2>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '12px' }}>Login</h2>
             <p style={{ color: 'var(--text-muted)' }}>
-              Please sign in with your Google account to access the AI Fellowship portal.
+              Enter any Gmail and Password to access the program.
             </p>
           </div>
 
-          {error && (
-            <div style={{ marginBottom: '24px', padding: '12px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '8px', color: '#f87171', fontSize: '0.875rem' }}>
-              {error}
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Gmail</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', padding: '14px 18px', borderRadius: '12px', color: 'var(--text)', outline: 'none' }}
+                placeholder="you@gmail.com"
+              />
             </div>
-          )}
 
-          <button
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            className="btn-primary"
-            style={{
-              width: '100%',
-              padding: '16px',
-              fontSize: '1.1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              background: 'white',
-              color: '#000',
-              border: 'none',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-            }}
-          >
-            {loading ? (
-              'Authenticating...'
-            ) : (
-              <>
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style={{ width: '20px' }} />
-                Continue with Google
-              </>
-            )}
-          </button>
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Password</label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', padding: '14px 18px', borderRadius: '12px', color: 'var(--text)', outline: 'none' }}
+                placeholder="••••••••"
+              />
+            </div>
 
-          <p style={{ marginTop: '32px', color: 'var(--text-muted)', fontSize: '0.8rem', lineHeight: '1.6' }}>
-            By continuing, you agree to our Terms of Service and Privacy Policy.
+            <button type="submit" className="btn-primary" style={{ padding: '16px', fontSize: '1.1rem' }}>
+              Enter Program
+            </button>
+          </form>
+
+          <p style={{ marginTop: '32px', color: 'var(--text-muted)', fontSize: '0.8rem', lineHeight: '1.6', textAlign: 'center' }}>
+            Public access enabled for testing purposes.
           </p>
         </motion.div>
       </div>
@@ -916,30 +869,16 @@ const App = () => {
   const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    const savedProgress = localStorage.getItem('progress');
     const savedTheme = localStorage.getItem('theme') || 'dark';
+
+    if (savedUser) setUser(JSON.parse(savedUser));
+    if (savedProgress) setProgress(JSON.parse(savedProgress));
+
     setTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
-
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          name: firebaseUser.displayName || firebaseUser.email.split('@')[0]
-        });
-
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        if (userDoc.exists() && userDoc.data().progress) {
-          setProgress(userDoc.data().progress);
-        }
-      } else {
-        setUser(null);
-        setProgress({ completedWeeks: [], completedModules: [], quizScores: {} });
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribeAuth();
+    setLoading(false);
   }, []);
 
   const toggleTheme = () => {
@@ -950,13 +889,12 @@ const App = () => {
   };
 
   useEffect(() => {
-    if (user && user.uid) {
-      setDoc(doc(db, 'users', user.uid), { progress }, { merge: true });
-    }
-  }, [progress, user]);
+    localStorage.setItem('progress', JSON.stringify(progress));
+  }, [progress]);
 
-  const handleLogout = async () => {
-    await signOut(auth);
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
   };
 
   if (loading) return <div style={{ minHeight: '100vh', background: 'var(--background)' }}></div>;
