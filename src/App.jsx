@@ -13,7 +13,10 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
-  signOut
+  signOut,
+  GoogleAuthProvider,
+  signInWithRedirect,
+  getRedirectResult
 } from 'firebase/auth';
 import {
   doc,
@@ -30,16 +33,56 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    // Handle redirect result when returning from Google login
+    const handleRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          const user = result.user;
+          const userRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userRef);
+
+          if (!userDoc.exists()) {
+            await setDoc(userRef, {
+              name: user.displayName,
+              email: user.email,
+              progress: {
+                completedWeeks: [],
+                completedModules: [],
+                quizScores: {}
+              }
+            });
+          }
+        }
+      } catch (err) {
+        setError(err.message.replace('Firebase:', ''));
+      }
+    };
+    handleRedirect();
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError('');
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    try {
+      await signInWithRedirect(auth, provider);
+    } catch (err) {
+      setError(err.message.replace('Firebase:', ''));
+      setLoading(false);
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      // Try to sign in
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
       if (err.code === 'auth/user-not-found') {
-        // If user not found, try to create account
         try {
           const userCredential = await createUserWithEmailAndPassword(auth, email, password);
           await setDoc(doc(db, 'users', userCredential.user.uid), {
@@ -164,8 +207,41 @@ const Login = () => {
             </button>
           </form>
 
+          <p style={{ marginTop: '24px', marginBottom: '24px', color: 'var(--text-muted)', fontSize: '0.8rem', position: 'relative' }}>
+            <span style={{ background: 'var(--card-bg)', padding: '0 10px', position: 'relative', zIndex: 1 }}>OR</span>
+            <span style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: 'var(--glass-border)', zIndex: 0 }}></span>
+          </p>
+
+          <button
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="btn-primary"
+            style={{
+              width: '100%',
+              padding: '16px',
+              fontSize: '1.1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              background: 'white',
+              color: '#000',
+              border: 'none',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+            }}
+          >
+            {loading ? (
+              'Authenticating...'
+            ) : (
+              <>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style={{ width: '20px' }} />
+                Continue with Google
+              </>
+            )}
+          </button>
+
           <p style={{ marginTop: '32px', color: 'var(--text-muted)', fontSize: '0.8rem', lineHeight: '1.6', textAlign: 'center' }}>
-            Public access enabled for testing purposes.
+            By continuing, you agree to our Terms of Service and Privacy Policy.
           </p>
         </motion.div>
       </div>
