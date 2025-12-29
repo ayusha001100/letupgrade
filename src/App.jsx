@@ -8,96 +8,25 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { courseData } from './data/courseData';
-import { auth, db } from './firebase';
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut,
-  GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult
-} from 'firebase/auth';
-import {
-  doc,
-  getDoc,
-  setDoc,
-  onSnapshot
-} from 'firebase/firestore';
 import './index.css';
 
 // --- Authentication Mock ---
-const Login = () => {
+const Login = ({ setUser }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    // Handle redirect result when returning from Google login
-    const handleRedirect = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result && result.user) {
-          const user = result.user;
-          const userRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userRef);
-
-          if (!userDoc.exists()) {
-            await setDoc(userRef, {
-              name: user.displayName,
-              email: user.email,
-              progress: {
-                completedWeeks: [],
-                completedModules: [],
-                quizScores: {}
-              }
-            });
-          }
-        }
-      } catch (err) {
-        setError(err.message.replace('Firebase:', ''));
-      }
-    };
-    handleRedirect();
-  }, []);
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    setError('');
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    try {
-      await signInWithRedirect(auth, provider);
-    } catch (err) {
-      setError(err.message.replace('Firebase:', ''));
-      setLoading(false);
-    }
-  };
-
-  const handleLogin = async (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (err) {
-      if (err.code === 'auth/user-not-found') {
-        try {
-          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-          await setDoc(doc(db, 'users', userCredential.user.uid), {
-            email: email,
-            name: email.split('@')[0],
-            progress: { completedWeeks: [], completedModules: [], quizScores: {} }
-          });
-        } catch (createErr) {
-          setError(createErr.message.replace('Firebase:', ''));
-        }
-      } else {
-        setError(err.message.replace('Firebase:', ''));
-      }
-    } finally {
-      setLoading(false);
+    if (email && password) {
+      const mockUser = {
+        name: email.split('@')[0],
+        email: email,
+        uid: 'mock-user-id'
+      };
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      setUser(mockUser);
+      navigate('/dashboard');
     }
   };
 
@@ -165,17 +94,11 @@ const Login = () => {
           style={{ width: '100%', maxWidth: '440px', padding: '48px', border: '1px solid var(--glass-border)' }}
         >
           <div style={{ marginBottom: '40px' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '12px' }}>Welcome</h2>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '12px' }}>Login</h2>
             <p style={{ color: 'var(--text-muted)' }}>
-              Enter your Gmail and password to access the AI Fellowship portal.
+              Enter any Gmail and Password to access the program.
             </p>
           </div>
-
-          {error && (
-            <div style={{ marginBottom: '24px', padding: '12px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '8px', color: '#f87171', fontSize: '0.875rem' }}>
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div>
@@ -202,46 +125,13 @@ const Login = () => {
               />
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary" style={{ padding: '16px', fontSize: '1.1rem' }}>
-              {loading ? 'Entering...' : 'Enter Program'}
+            <button type="submit" className="btn-primary" style={{ padding: '16px', fontSize: '1.1rem' }}>
+              Enter Program
             </button>
           </form>
 
-          <p style={{ marginTop: '24px', marginBottom: '24px', color: 'var(--text-muted)', fontSize: '0.8rem', position: 'relative' }}>
-            <span style={{ background: 'var(--card-bg)', padding: '0 10px', position: 'relative', zIndex: 1 }}>OR</span>
-            <span style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: 'var(--glass-border)', zIndex: 0 }}></span>
-          </p>
-
-          <button
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            className="btn-primary"
-            style={{
-              width: '100%',
-              padding: '16px',
-              fontSize: '1.1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              background: 'white',
-              color: '#000',
-              border: 'none',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-            }}
-          >
-            {loading ? (
-              'Authenticating...'
-            ) : (
-              <>
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style={{ width: '20px' }} />
-                Continue with Google
-              </>
-            )}
-          </button>
-
           <p style={{ marginTop: '32px', color: 'var(--text-muted)', fontSize: '0.8rem', lineHeight: '1.6', textAlign: 'center' }}>
-            By continuing, you agree to our Terms of Service and Privacy Policy.
+            Public access enabled for testing purposes.
           </p>
         </motion.div>
       </div>
@@ -979,30 +869,16 @@ const App = () => {
   const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    const savedProgress = localStorage.getItem('progress');
     const savedTheme = localStorage.getItem('theme') || 'dark';
+
+    if (savedUser) setUser(JSON.parse(savedUser));
+    if (savedProgress) setProgress(JSON.parse(savedProgress));
+
     setTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
-
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          name: firebaseUser.displayName || firebaseUser.email.split('@')[0]
-        });
-
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        if (userDoc.exists() && userDoc.data().progress) {
-          setProgress(userDoc.data().progress);
-        }
-      } else {
-        setUser(null);
-        setProgress({ completedWeeks: [], completedModules: [], quizScores: {} });
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribeAuth();
+    setLoading(false);
   }, []);
 
   const toggleTheme = () => {
@@ -1013,13 +889,12 @@ const App = () => {
   };
 
   useEffect(() => {
-    if (user && user.uid && user.uid !== 'mock-user-id') {
-      setDoc(doc(db, 'users', user.uid), { progress }, { merge: true });
-    }
-  }, [progress, user]);
+    localStorage.setItem('progress', JSON.stringify(progress));
+  }, [progress]);
 
-  const handleLogout = async () => {
-    await signOut(auth);
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
   };
 
   if (loading) return <div style={{ minHeight: '100vh', background: 'var(--background)' }}></div>;
@@ -1033,7 +908,7 @@ const App = () => {
       <AnimatePresence mode="wait">
         <Routes>
           {!user ? (
-            <Route path="*" element={<Login />} />
+            <Route path="*" element={<Login setUser={setUser} />} />
           ) : (
             <Route path="*" element={
               <>
