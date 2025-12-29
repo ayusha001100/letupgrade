@@ -18,7 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Lock, CheckCircle, Play, ChevronRight, User, LogOut,
   Menu, X, BookOpen, Layers, Lightbulb, Workflow, Eye, Zap,
-  ExternalLink, ArrowLeft, Trophy, Sun, Moon
+  ExternalLink, ArrowLeft, Trophy, Sun, Moon, Edit2, Check
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { courseData } from './data/courseData';
@@ -40,8 +40,9 @@ const Login = ({ setUser }) => {
       const userDoc = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userDoc);
 
+      let userData;
       if (!userSnap.exists()) {
-        await setDoc(userDoc, {
+        userData = {
           name: user.displayName,
           email: user.email,
           uid: user.uid,
@@ -51,11 +52,14 @@ const Login = ({ setUser }) => {
             quizScores: {}
           },
           createdAt: new Date().toISOString()
-        });
+        };
+        await setDoc(userDoc, userData);
+      } else {
+        userData = userSnap.data();
       }
 
       const sessionUser = {
-        name: user.displayName,
+        name: userData.name || user.displayName,
         email: user.email,
         uid: user.uid,
         photoURL: user.photoURL
@@ -236,7 +240,11 @@ const Navbar = ({ user, handleLogout, theme, toggleTheme }) => (
   </nav>
 );
 
-const Profile = ({ user, progress }) => {
+const Profile = ({ user, progress, setUser }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempName, setTempName] = useState(user?.name || '');
+  const [isSaving, setIsSaving] = useState(false);
+
   const totalWeeks = 12;
   const totalModules = courseData.reduce((acc, week) => acc + (week.modules?.length || 0), 0);
 
@@ -244,6 +252,21 @@ const Profile = ({ user, progress }) => {
   const totalCorrect = Object.values(progress.quizScores || {}).reduce((acc, score) => acc + score, 0);
   const totalTested = completedModulesCount * 5;
   const overallScore = totalTested > 0 ? Math.round((totalCorrect / totalTested) * 100) : 0;
+
+  const handleSaveName = async () => {
+    if (!tempName.trim()) return;
+    setIsSaving(true);
+    try {
+      const userDoc = doc(db, 'users', user.uid);
+      await updateDoc(userDoc, { name: tempName });
+      setUser({ ...user, name: tempName });
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Error updating name:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const stats = [
     { label: 'Overall Score', value: `${overallScore}%`, sub: 'Average Performance', icon: <Trophy size={20} color="#f59e0b" />, color: '#f59e0b' },
@@ -292,7 +315,57 @@ const Profile = ({ user, progress }) => {
           {user?.name?.charAt(0).toUpperCase()}
         </div>
         <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 800, margin: '0 0 12px 0' }}>{user?.name || 'Ayush Aryan'}</h1>
+          {isEditing ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <input
+                type="text"
+                value={tempName}
+                onChange={(e) => setTempName(e.target.value)}
+                style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 800,
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid var(--glass-border)',
+                  borderRadius: '12px',
+                  color: 'var(--text)',
+                  padding: '8px 16px',
+                  width: '100%',
+                  outline: 'none'
+                }}
+                autoFocus
+              />
+              <button
+                onClick={handleSaveName}
+                disabled={isSaving}
+                className="btn-primary"
+                style={{ padding: '12px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                {isSaving ? <div className="loader" style={{ width: '20px', height: '20px' }}></div> : <Check size={24} />}
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
+              <h1 style={{ fontSize: '2.5rem', fontWeight: 800, margin: 0 }}>{user?.name || 'Ayush Aryan'}</h1>
+              <button
+                onClick={() => setIsEditing(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.3s ease'
+                }}
+                className="edit-hover"
+              >
+                <Edit2 size={20} />
+              </button>
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '24px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><User size={16} /> {user?.email || 'user@example.com'}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><BookOpen size={16} /> Member since 2025</span>
@@ -928,7 +1001,7 @@ const App = () => {
         if (userSnap.exists()) {
           const userData = userSnap.data();
           setUser({
-            name: fbUser.displayName,
+            name: userData.name || fbUser.displayName,
             email: fbUser.email,
             uid: fbUser.uid,
             photoURL: fbUser.photoURL
@@ -989,7 +1062,7 @@ const App = () => {
                 <Navbar user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} />
                 <Routes>
                   <Route path="/dashboard" element={<Dashboard progress={progress} />} />
-                  <Route path="/profile" element={<Profile user={user} progress={progress} />} />
+                  <Route path="/profile" element={<Profile user={user} progress={progress} setUser={setUser} />} />
                   <Route path="/week/:weekId" element={<WeekView progress={progress} setProgress={setProgress} />} />
                   <Route path="/week/:weekId/module/:moduleId" element={<ModuleView progress={progress} setProgress={setProgress} />} />
                   <Route path="*" element={<Navigate to="/dashboard" />} />
