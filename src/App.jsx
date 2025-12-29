@@ -178,6 +178,102 @@ const Login = ({ setUser }) => {
 
 // --- Components ---
 
+const LogoutButton = ({ onLogout }) => {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleClick = () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    setTimeout(() => {
+      onLogout();
+    }, 1000);
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      className="btn-outline"
+      disabled={isLoggingOut}
+      style={{
+        padding: '8px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        position: 'relative',
+        overflow: 'hidden',
+        minWidth: '130px',
+        height: '40px',
+        justifyContent: 'center',
+        perspective: '1000px'
+      }}
+    >
+      <motion.span
+        animate={isLoggingOut ? { opacity: 0, x: -20 } : { opacity: 1, x: 0 }}
+        style={{ fontWeight: 600, fontSize: '0.9rem' }}
+      >
+        Logout
+      </motion.span>
+
+      <div style={{ position: 'relative', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Door Frame */}
+        <div style={{
+          position: 'absolute',
+          right: '2px',
+          width: '12px',
+          height: '18px',
+          border: '2px solid var(--text-muted)',
+          borderLeft: 'none',
+          borderRadius: '0 2px 2px 0',
+          opacity: 0.5
+        }} />
+
+        {/* Door Leaf */}
+        <motion.div
+          initial={{ rotateY: 0 }}
+          animate={isLoggingOut ? { rotateY: -110 } : { rotateY: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          style={{
+            position: 'absolute',
+            right: '2px',
+            width: '12px',
+            height: '18px',
+            background: 'var(--secondary)',
+            borderRadius: '1px',
+            transformOrigin: 'left',
+            zIndex: 2,
+            boxShadow: '0 0 10px rgba(168, 85, 247, 0.3)'
+          }}
+        />
+
+        {/* Person Icon */}
+        <motion.div
+          initial={{ x: -12, opacity: 1, scale: 1, y: 0 }}
+          animate={isLoggingOut ? {
+            x: [null, 6, 8],
+            y: [null, 0, 30],
+            opacity: [1, 1, 0],
+            scale: [1, 1, 0.5],
+            rotate: [0, 0, 45]
+          } : { x: -12 }}
+          transition={{
+            duration: 0.8,
+            times: [0, 0.5, 1],
+            ease: "easeInOut"
+          }}
+          style={{
+            position: 'absolute',
+            left: '0px',
+            zIndex: 1,
+            color: 'var(--accent)'
+          }}
+        >
+          <User size={16} fill="currentColor" />
+        </motion.div>
+      </div>
+    </button>
+  );
+};
+
 const Navbar = ({ user, handleLogout, theme, toggleTheme }) => (
   <nav className="glass-card" style={{
     margin: '20px',
@@ -233,9 +329,7 @@ const Navbar = ({ user, handleLogout, theme, toggleTheme }) => (
         </div>
       </Link>
 
-      <button onClick={handleLogout} className="btn-outline" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <LogOut size={16} /> Logout
-      </button>
+      <LogoutButton onLogout={handleLogout} />
     </div>
   </nav>
 );
