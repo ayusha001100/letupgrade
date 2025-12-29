@@ -281,13 +281,13 @@ const Profile = ({ user, progress, setUser }) => {
     { title: 'Prompt Master', desc: 'Achieved 80%+ average', icon: '🪄', achieved: overallScore >= 80 && completedModulesCount >= 3 }
   ];
 
-  // Map progress to chart heights using real data ratios
+  // Map progress to chart heights using real data ratios - using hex for better CSS manipulation
   const chartData = [
-    { label: 'Goal', value: totalModules, max: totalModules, color: 'rgba(99, 102, 241, 0.4)', sub: 'Modules' },
-    { label: 'Comp', value: completedModulesCount, max: totalModules, color: 'var(--accent)', sub: 'Finished' },
-    { label: 'Corr', value: totalCorrect, max: totalModules * 5, color: '#10b981', sub: 'Correct' },
-    { label: 'Incorr', value: totalTested - totalCorrect, max: totalModules * 5, color: '#ef4444', sub: 'Wrong' },
-    { label: 'Points', value: totalCorrect * 10, max: totalModules * 50, color: '#f59e0b', sub: 'XP' }
+    { label: 'Goal', value: totalModules, max: totalModules || 1, color: '#6366f1', sub: 'Modules' },
+    { label: 'Comp', value: completedModulesCount, max: totalModules || 1, color: '#a855f7', sub: 'Finished' },
+    { label: 'Corr', value: totalCorrect, max: (totalModules * 5) || 1, color: '#10b981', sub: 'Correct' },
+    { label: 'Incorr', value: totalTested - totalCorrect, max: (totalModules * 5) || 1, color: '#ef4444', sub: 'Wrong' },
+    { label: 'Points', value: totalCorrect * 10, max: (totalModules * 50) || 1, color: '#f59e0b', sub: 'XP' }
   ];
 
   return (
@@ -414,14 +414,21 @@ const Profile = ({ user, progress, setUser }) => {
           className="glass-card"
           style={{ padding: '32px', position: 'relative', overflow: 'hidden' }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', position: 'relative', zIndex: 11 }}>
             <div>
               <h3 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>Performance Overview</h3>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Dynamic growth tracking based on module activity</p>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '2px', display: 'block' }}>REAL-TIME ANALYTICS</span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 700 }}>VERIFIED</span>
+            <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <motion.div
+                  animate={{ opacity: [1, 0.4, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }}
+                />
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '2px', fontWeight: 700 }}>REAL-TIME</span>
+              </div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 700 }}>ANALYTICS VERIFIED</span>
             </div>
           </div>
 
@@ -435,7 +442,7 @@ const Profile = ({ user, progress, setUser }) => {
                 right: 0,
                 height: '1px',
                 background: 'var(--glass-border)',
-                opacity: 0.3,
+                opacity: 0.2,
                 zIndex: 0
               }}>
                 <span style={{ position: 'absolute', left: '-10px', top: '-8px', fontSize: '0.6rem', color: 'var(--text-muted)' }}>{level}%</span>
@@ -445,18 +452,18 @@ const Profile = ({ user, progress, setUser }) => {
             {chartData.map((data, i) => {
               const percentage = Math.max((data.value / data.max) * 100, 5);
               return (
-                <div key={i} className="chart-column" style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', zIndex: 1 }}>
+                <div key={i} className="chart-column" style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', zIndex: 10 }}>
                   <div style={{ position: 'relative', width: '60%', height: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: `${percentage}%`, opacity: 1 }}
-                      transition={{ duration: 1, delay: i * 0.1, ease: "easeOut" }}
-                      whileHover={{ scaleX: 1.1, filter: 'brightness(1.2)' }}
+                      transition={{ duration: 1.2, delay: i * 0.1, ease: [0.33, 1, 0.68, 1] }}
+                      whileHover={{ scaleX: 1.1, filter: 'brightness(1.3)' }}
                       className="chart-bar"
                       style={{
                         width: '100%',
-                        background: `linear-gradient(to top, ${data.color}, ${data.color}88)`,
-                        borderRadius: '12px 12px 4px 4px',
+                        background: `linear-gradient(to top, ${data.color}, ${data.color}aa)`,
+                        borderRadius: '12px 12px 6px 6px',
                         cursor: 'pointer',
                         boxShadow: `0 10px 30px ${data.color}33`,
                         position: 'relative'
@@ -464,7 +471,8 @@ const Profile = ({ user, progress, setUser }) => {
                     >
                       {/* Tooltip on hover */}
                       <div className="chart-tooltip">
-                        {data.value} {data.sub}
+                        <div style={{ fontSize: '0.7rem', opacity: 0.7, marginBottom: '2px' }}>{data.label}</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 800 }}>{data.value} <span style={{ fontSize: '0.7rem' }}>{data.sub}</span></div>
                       </div>
                     </motion.div>
                   </div>
@@ -485,9 +493,10 @@ const Profile = ({ user, progress, setUser }) => {
             transform: 'translateX(-50%)',
             width: '80%',
             height: '40%',
-            background: 'radial-gradient(ellipse at center, var(--primary) 0%, transparent 70%)',
-            opacity: 0.1,
-            pointerEvents: 'none'
+            background: `radial-gradient(ellipse at center, ${chartData[0].color}33 0%, transparent 70%)`,
+            opacity: 0.2,
+            pointerEvents: 'none',
+            zIndex: 1
           }}></div>
         </motion.div>
 
