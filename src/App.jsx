@@ -74,7 +74,7 @@ const Login = ({ setUser }) => {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--background)', color: 'var(--text)' }}>
+    <div className="auth-container" style={{ display: 'flex', minHeight: '100vh', background: 'var(--background)', color: 'var(--text)' }}>
       {/* Left Side: Brand & Visuals */}
       <div className="auth-visual-side" style={{
         flex: '1.2',
@@ -281,22 +281,25 @@ const Profile = ({ user, progress, setUser }) => {
     { title: 'Prompt Master', desc: 'Achieved 80%+ average', icon: '🪄', achieved: overallScore >= 80 && completedModulesCount >= 3 }
   ];
 
-  // Map progress to chart heights (mocking 5 categories based on real data)
+  // Map progress to chart heights using real data ratios
   const chartData = [
-    { label: 'Goal', h: 0.9, color: 'rgba(99, 102, 241, 0.4)' },
-    { label: 'Comp', h: Math.min(completedModulesCount / 10, 1), color: 'var(--accent)' },
-    { label: 'Corr', h: Math.min(totalCorrect / 50, 1), color: 'var(--success)' },
-    { label: 'Incorr', h: Math.min((totalTested - totalCorrect) / 50, 1), color: '#ef4444' },
-    { label: 'Points', h: Math.min(totalCorrect / 100, 1), color: '#f59e0b' }
+    { label: 'Goal', value: totalModules, max: totalModules, color: 'rgba(99, 102, 241, 0.4)', sub: 'Modules' },
+    { label: 'Comp', value: completedModulesCount, max: totalModules, color: 'var(--accent)', sub: 'Finished' },
+    { label: 'Corr', value: totalCorrect, max: totalModules * 5, color: '#10b981', sub: 'Correct' },
+    { label: 'Incorr', value: totalTested - totalCorrect, max: totalModules * 5, color: '#ef4444', sub: 'Wrong' },
+    { label: 'Points', value: totalCorrect * 10, max: totalModules * 50, color: '#f59e0b', sub: 'XP' }
   ];
 
   return (
     <div style={{ padding: '40px 20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '24px', width: 'fit-content', padding: '8px 16px', borderRadius: '12px' }} className="edit-hover">
+        <ArrowLeft size={16} /> Back to Dashboard
+      </Link>
       {/* Profile Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card"
+        className="glass-card profile-header"
         style={{ padding: '40px', display: 'flex', alignItems: 'center', gap: '32px', marginBottom: '32px' }}
       >
         <div style={{
@@ -366,7 +369,7 @@ const Profile = ({ user, progress, setUser }) => {
               </button>
             </div>
           )}
-          <div style={{ display: 'flex', gap: '24px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+          <div className="profile-header-info" style={{ display: 'flex', gap: '24px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><User size={16} /> {user?.email || 'user@example.com'}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><BookOpen size={16} /> Member since 2025</span>
           </div>
@@ -380,7 +383,7 @@ const Profile = ({ user, progress, setUser }) => {
       </motion.div>
 
       {/* Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+      <div className="profile-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '32px' }}>
         {stats.map((stat, i) => (
           <motion.div
             key={i}
@@ -403,33 +406,91 @@ const Profile = ({ user, progress, setUser }) => {
       </div>
 
       {/* Bottom Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+      <div className="profile-bottom-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
         {/* Performance Chart */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="glass-card"
-          style={{ padding: '32px' }}
+          style={{ padding: '32px', position: 'relative', overflow: 'hidden' }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Performance Distribution</h3>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '1px' }}>REAL-TIME ANALYTICS</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', position: 'relative', zIndex: 1 }}>
+            <div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>Performance Overview</h3>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Dynamic growth tracking based on module activity</p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '2px', display: 'block' }}>REAL-TIME ANALYTICS</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 700 }}>VERIFIED</span>
+            </div>
           </div>
-          <div style={{ height: '250px', display: 'flex', alignItems: 'flex-end', gap: '20px', padding: '0 20px' }}>
-            {chartData.map((data, i) => (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                <div style={{
-                  width: '100%',
-                  height: `${Math.max(data.h * 100, 5)}%`,
-                  background: data.color,
-                  borderRadius: '8px 8px 4px 4px',
-                  transition: 'all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                }}></div>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>{data.label}</span>
+
+          <div style={{ height: '300px', position: 'relative', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', padding: '0 20px 40px' }}>
+            {/* Background Grid Lines */}
+            {[0, 25, 50, 75, 100].map((level) => (
+              <div key={level} style={{
+                position: 'absolute',
+                bottom: `${level}%`,
+                left: 0,
+                right: 0,
+                height: '1px',
+                background: 'var(--glass-border)',
+                opacity: 0.3,
+                zIndex: 0
+              }}>
+                <span style={{ position: 'absolute', left: '-10px', top: '-8px', fontSize: '0.6rem', color: 'var(--text-muted)' }}>{level}%</span>
               </div>
             ))}
+
+            {chartData.map((data, i) => {
+              const percentage = Math.max((data.value / data.max) * 100, 5);
+              return (
+                <div key={i} className="chart-column" style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', zIndex: 1 }}>
+                  <div style={{ position: 'relative', width: '60%', height: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: `${percentage}%`, opacity: 1 }}
+                      transition={{ duration: 1, delay: i * 0.1, ease: "easeOut" }}
+                      whileHover={{ scaleX: 1.1, filter: 'brightness(1.2)' }}
+                      className="chart-bar"
+                      style={{
+                        width: '100%',
+                        background: `linear-gradient(to top, ${data.color}, ${data.color}88)`,
+                        borderRadius: '12px 12px 4px 4px',
+                        cursor: 'pointer',
+                        boxShadow: `0 10px 30px ${data.color}33`,
+                        position: 'relative'
+                      }}
+                    >
+                      {/* Tooltip on hover */}
+                      <div className="chart-tooltip">
+                        {data.value} {data.sub}
+                      </div>
+                    </motion.div>
+                  </div>
+                  <div className="chart-label-container">
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text)', fontWeight: 800 }}>{data.label}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{data.sub}</div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
+
+          {/* Chart Glow Effect */}
+          <div style={{
+            position: 'absolute',
+            bottom: '-20%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '80%',
+            height: '40%',
+            background: 'radial-gradient(ellipse at center, var(--primary) 0%, transparent 70%)',
+            opacity: 0.1,
+            pointerEvents: 'none'
+          }}></div>
         </motion.div>
+
 
         {/* Mastery Badges */}
         <motion.div
@@ -553,7 +614,7 @@ const Dashboard = ({ progress }) => {
         </p>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px', maxWidth: '1200px', margin: '0 auto' }}>
         {courseData.map((week, idx) => {
           const isUnlocked = idx === 0 || progress.completedWeeks.includes(courseData[idx - 1].id);
           const isCompleted = progress.completedWeeks.includes(week.id);
