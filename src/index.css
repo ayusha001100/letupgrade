@@ -20,21 +20,24 @@
 
 html,
 body {
-  background-color: #050505;
-  transition: background-color 0.3s ease;
+  background-color: var(--background);
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme='light'] {
-  --primary: #0f172a;
+  --primary: #6366f1;
+  --primary-glow: rgba(99, 102, 241, 0.1);
+  --secondary: #8b5cf6;
+  --accent: #7c3aed;
   --background: #f8fafc;
   --surface: #ffffff;
   --surface-hover: #f1f5f9;
   --text: #0f172a;
   --text-muted: #64748b;
-  --glass: rgba(0, 0, 0, 0.02);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --nav-bg: rgba(255, 255, 255, 0.8);
-  --accent: #7c3aed;
+  --glass: rgba(0, 0, 0, 0.01);
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --nav-bg: rgba(255, 255, 255, 0.85);
+  --success: #059669;
 }
 
 * {
@@ -74,6 +77,10 @@ h6 {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='dark'] .glass-card {
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
 }
 
@@ -179,10 +186,19 @@ h6 {
   width: 100%;
   height: 100%;
   background-image:
-    linear-gradient(rgba(99, 102, 241, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
   background-size: 50px 50px;
   z-index: -1;
+  opacity: 0.5;
+}
+
+:root {
+  --grid-color: rgba(99, 102, 241, 0.1);
+}
+
+[data-theme='light'] {
+  --grid-color: rgba(99, 102, 241, 0.05);
 }
 
 .glow-orb {
@@ -223,7 +239,7 @@ h6 {
 .detail-section {
   padding: 20px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--glass);
   border: 1px solid var(--glass-border);
 }
 
