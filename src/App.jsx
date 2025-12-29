@@ -1129,6 +1129,7 @@ const App = () => {
           ) : (
             <Route path="*" element={
               <>
+                <div className="top-blur-barrier"></div>
                 <Navbar user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} />
                 <Routes>
                   <Route path="/dashboard" element={<Dashboard progress={progress} />} />

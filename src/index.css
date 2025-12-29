@@ -517,3 +517,16 @@ pre code {
 .chart-column:hover {
   filter: drop-shadow(0 0 10px var(--primary-glow));
 }
+
+.top-blur-barrier {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  backdrop-filter: blur(20px);
+  mask-image: linear-gradient(to bottom, black, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent);
+  z-index: 101;
+  pointer-events: none;
+}
