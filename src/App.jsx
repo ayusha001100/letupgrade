@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, useParams } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, Link, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Lock, CheckCircle, Play, ChevronRight, User, LogOut,
@@ -769,6 +769,19 @@ const ModuleView = ({ progress, setProgress }) => {
         </motion.div>
       ) : (
         <>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="video-container"
+          >
+            <iframe
+              src="https://www.youtube.com/embed/gOwl8AbHo3w?start=234"
+              title="YouTube video player"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            ></iframe>
+          </motion.div>
+
           {module.details ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
               {module.details.map((detail, idx) => (

@@ -324,14 +324,337 @@ export const courseData = [
         title: "Week 2: Prompt Engineering & Workflows",
         overview: "Practical Application",
         modules: [
-            { id: "2.1", name: "Thinking in Steps: Breaking Down Work for AI", topic: "Task Decomposition", subtopic: "Step-based thinking" },
-            { id: "2.2", name: "Designing Prompt Chains (Mini-Workflows)", topic: "Prompt Workflows", subtopic: "Prompt chaining" },
-            { id: "2.3", name: "Advanced Prompt Techniques for Quality & Control", topic: "Output Control", subtopic: "Precision prompting" },
-            { id: "2.4", name: "Role-Specific AI Playbooks", topic: "Functional Use Cases", subtopic: "Playbook design" },
-            { id: "2.5", name: "Using AI as Critic, Reviewer & Coach", topic: "AI as Reviewer", subtopic: "Review workflows" },
-            { id: "2.6", name: "Guardrails, Mistakes & Safe Usage of Prompt Chains", topic: "Risk & Governance", subtopic: "Safe AI use" },
-            { id: "2.7", name: "Week 2 Application & Reflection", topic: "Practical Application", subtopic: "Hands-on build" }
+            {
+                id: "2.1",
+                name: "Thinking in Steps: Breaking Down Work for AI",
+                topic: "Task Decomposition",
+                subtopic: "Step-based thinking",
+                details: [
+                    {
+                        id: "2.1.1",
+                        title: "Why complex tasks fail with single mega-prompts",
+                        concepts: "AI struggles when instructions are too long, vague, or unclear. Mega-prompts overload the model, leading to confusion and hallucination. The model doesn’t know what to prioritize unless steps are separated. Good prompting = divide big problem into smaller, clear steps.",
+                        examples: "❌ **Mega-prompt**: “Write a recruitment plan, create interview questions, design a JD, draft emails, and make a performance rubric in one go.” → Output becomes shallow and inconsistent.\n✅ **Step-by-step**: 1. Write JD -> 2. Create scoring criteria -> 3. Draft outreach emails -> 4. Make onboarding steps. Each step gets better quality.",
+                        visualization: "Flow diagram: One giant block (messy output) vs Flow diagram showing Step 1 → Step 2 → Step 3 → Step 4 (clear outputs). “Task too big → AI confused” vs “Task broken → AI reliable”.",
+                        practical: "- **HR**: Break hiring workflow into stages.\n- **Ops**: Break SOP creation into steps.\n- **Students**: Break assignments into sections.\n- **Managers**: Break reports into structured tasks."
+                    },
+                    {
+                        id: "2.1.2",
+                        title: "Decomposing a task into stages: Understand → Analyze → Generate → Polish",
+                        concepts: "Every complex task has 4 universal steps:\n1. **Understand** → AI gathers context.\n2. **Analyze** → AI extracts insights, patterns, issues.\n3. **Generate** → AI produces the draft.\n4. **Polish** → AI improves tone, clarity, formatting.\nTeaching the model to follow this pipeline drastically improves quality.",
+                        examples: "**Example: Creating a Report**\nStep 1: Understand - “Read this document and identify key topics.”\nStep 2: Analyze - “Extract insights, problems, opportunities.”\nStep 3: Generate - “Write a structured report with headings.”\nStep 4: Polish - “Rewrite concisely, professional tone.”",
+                        visualization: "Four-step ladder: Understand → Analyze → Generate → Polish. Pipeline image showing each stage leading to the next. Before/after showing quality difference between mega-prompt vs step-wise prompting.",
+                        practical: "- **Emails**: Understand → Rewrite → Polish.\n- **Planning**: Understand → Analyze → Propose → Refine.\n- **Marketing brief**: Extract → Outline → Write → Edit.\n- **Research**: Read → Summarize → Compare → Synthesize."
+                    },
+                    {
+                        id: "2.1.3",
+                        title: "Identifying where AI should help vs where you decide",
+                        concepts: "AI can assist with structured tasks, but humans must control decision-making, judgment, prioritization, and interpretation. AI should not replace your critical thinking.",
+                        examples: "**AI Should Do**: Drafting emails, creating outlines, summaries, rewrites, generating variations.\n**You Should Do**: Final tone approval, accuracy check, strategic decisions, picking best version, reviewing for bias or missing info.",
+                        visualization: "Two-column chart: AI Responsibilities vs Human Responsibilities. Traffic light indicators: Green = AI safe, Yellow = AI assists, Red = human-only decisions.",
+                        practical: "- **HR**: AI drafts, YOU decide hiring steps.\n- **Sales**: AI writes emails, YOU choose pitch angle.\n- **Students**: AI summarizes, YOU interpret learnings.\n- **Ops**: AI drafts SOP, YOU validate accuracy."
+                    },
+                    {
+                        id: "2.1.4",
+                        title: "3–4 worked examples from real work",
+                        concepts: "Real examples show how step-wise prompting works. Seeing “before → after” builds confidence and makes AI more reliable and controllable.",
+                        examples: "1. **Email Sequence**: Step 1: Understand target, Step 2: Generate 3 variations, Step 3: Polish tone.\n2. **JD + Interview Kit**: Step 1: Understand role, Step 2: Create JD, Step 3: Create questions, Step 4: Create scoring sheet.\n3. **Report Creation**: Step 1: Extract insights, Step 2: Organize, Step 3: Write, Step 4: Polish.",
+                        visualization: "Step-by-step workflow boxes for each example. Before vs after outputs. Example prompt templates on screen.",
+                        practical: "- Train teams internally.\n- Build repeatable AI workflows.\n- Create your own prompt playbooks.\n- Understand where AI fits in daily tasks."
+                    }
+                ],
+                quiz: [
+                    { question: "Why do 'mega-prompts' often lead to hallucinations?", options: ["AI is too fast", "They overload the model with too much vague info", "AI doesn't like long words", "The prompt is too colorful"], answer: 1 },
+                    { question: "What is the second stage in the 4-step universal pipeline?", options: ["Understand", "Analyze", "Generate", "Polish"], answer: 1 },
+                    { question: "Which of these should a human always do?", options: ["Summarize a 10-page doc", "Draft 5 email subject lines", "Make final strategic decisions", "Turn bullets into a table"], answer: 2 },
+                    { question: "In the 4-step pipeline, what does 'Polish' involve?", options: ["Gathering context", "Extracting patterns", "Producing the first draft", "Improving tone and clarity"], answer: 3 },
+                    { question: "Breaking a task into steps makes AI:", options: ["Slower and more expensive", "Less accurate", "More reliable and controllable", "Harder to use"], answer: 2 }
+                ]
+            },
+            {
+                id: "2.2",
+                name: "Designing Prompt Chains (Mini-Workflows)",
+                topic: "Prompt Workflows",
+                subtopic: "Prompt chaining",
+                details: [
+                    {
+                        id: "2.2.1",
+                        title: "Types of steps in a chain: clarifier, transformer, generator, critic",
+                        concepts: "Prompt chains are built from 4 fundamental types:\n1. **Clarifier** → Refines input.\n2. **Transformer** → Changes form (bullets to paragraph).\n3. **Generator** → Creates new output (emails, JDs).\n4. **Critic** → Evaluates quality and suggests improvements.\nEach step has a single purpose → higher accuracy.",
+                        examples: "**Clarifier**: “List the 3 key points you understood before writing.”\n**Transformer**: “Convert these bullets into a summary.”\n**Generator**: “Write a JD based on this outline.”\n**Critic**: “Evaluate the JD for clarity.”",
+                        visualization: "A 4-box diagram: Clarifier → Transformer → Generator → Critic. Example of raw input → clarified → transformed → final draft.",
+                        practical: "- **HR**: Polishing JDs step-wise.\n- **Marketing**: Ideation → Copywriting → Editing.\n- **Ops**: SOP creation workflows.\n- **Students**: Outline → Draft → Revise."
+                    },
+                    {
+                        id: "2.2.2",
+                        title: "Chain templates: Brainstorm → Rank → Expand → Polish",
+                        concepts: "This chain is for idea generation that requires structure, quality, and refinement.\n1. **Brainstorm** → Raw ideas.\n2. **Rank** → Pick best ones.\n3. **Expand** → Turn ideas into detail.\n4. **Polish** → Quality check.",
+                        examples: "**Marketing Campaign**: \n- Brainstorm: “Give me 10 ideas.”\n- Rank: “Rank by creativity.”\n- Expand: “Expand top 2.”\n- Polish: “Pitch-ready tone.”",
+                        visualization: "Step-by-step funnel: Many ideas → filtered → expanded → refined. Before/after example showing rough → professional output.",
+                        practical: "- **Founders**: Brainstorming product features.\n- **Sales**: Crafting outreach angles.\n- **HR**: Employee engagement ideas.\n- **Students**: Brainstorming essay points."
+                    },
+                    {
+                        id: "2.2.3",
+                        title: "Chain templates: Extract → Organize → Summarize → Action items",
+                        concepts: "Used for long text, meetings, documents, or policies.\n1. **Extract** → Key points.\n2. **Organize** → Group themes.\n3. **Summarize** → Overview.\n4. **Action Items** → Next steps.",
+                        examples: "**Meeting Notes**: \n- Extract: “Extract decisions.”\n- Organize: “Group into Risks/Next Steps.”\n- Summarize: “Summarize in 5 bullets.”\n- Action Items: “List tasks with owners.”",
+                        visualization: "Vertical stack: Extract → Organize → Summarize → Action Items. Example meeting notes → clean structured output.",
+                        practical: "- **HR**: Meeting summaries.\n- **Ops**: SOP extraction.\n- **Students**: Summarizing chapters.\n- **BI**: Turning insights into actions."
+                    },
+                    {
+                        id: "2.2.4",
+                        title: "How to pass outputs from one step as inputs to the next",
+                        concepts: "Even without built-in chaining, you can manually move outputs. Copy output from step 1 and feed it into step 2 while maintaining clarity. Ensures quality grows with each pass.",
+                        examples: "**Manual Chaining**: Step 1 output (8 ideas) → Paste into Step 2 (Rank them) → Paste into Step 3 (Expand) → Paste into Step 4 (Polish).",
+                        visualization: "Arrows showing movement: Step Output → Step Input → Next Step. Copy/paste demonstration. Accuracy improvement chart.",
+                        practical: "- **HR**: Building JD + Interview kit.\n- **Marketing**: Content production.\n- **Founders**: Creating pitch decks.\n- **Ops**: SOP development chain."
+                    }
+                ],
+                quiz: [
+                    { question: "What does a 'Transformer' step do in a chain?", options: ["Creates new ideas", "Evaluates quality", "Changes the form of the input", "Asks for clarification"], answer: 2 },
+                    { question: "Which chain template is best for a content brainstorming session?", options: ["Extract -> Organize -> Summarize", "Brainstorm -> Rank -> Expand -> Polish", "Critic -> Generator -> Clarifier", "Role -> Task -> Output"], answer: 1 },
+                    { question: "What is 'manual passing' in prompt chaining?", options: ["Typing everything by hand", "Passing a physical document", "Copying output from one prompt and pasting it as input for the next", "Letting the AI decide the next step"], answer: 2 },
+                    { question: "Why is a 'Critic' step useful in a prompt chain?", options: ["To make the AI feel bad", "To identify hallucinations and improve quality", "To slow down the output", "To change the language"], answer: 1 },
+                    { question: "The 'Extract -> Organize -> Summarize' chain is most useful for:", options: ["Writing a novel", "Long documents or meeting notes", "Generating clickbait headlines", "Designing a logo"], answer: 1 }
+                ]
+            },
+            {
+                id: "2.3",
+                name: "Advanced Prompt Techniques for Quality & Control",
+                topic: "Output Control",
+                subtopic: "Precision prompting",
+                details: [
+                    {
+                        id: "2.3.1",
+                        title: "Using constraints (tone, length, format, audience)",
+                        concepts: "Constraints force AI to follow rules, making results more predictable. Types include: Tone (formal/friendly), Length (word counts/bullets), Format (table/checklist), and Audience (CEO/beginner).",
+                        examples: "**With constraints**: “Explain remote work to a CEO in 4 bullet points, under 12 words each, in a confident tone.” vs **Without**: “Write about remote work.”",
+                        visualization: "Before vs after constraints chart. Sliders showing tone, length, audience. Constraint box template (Tone/Length/Format/Audience).",
+                        practical: "- **HR**: Tone-controlled policies.\n- **Sales**: Tailored emails.\n- **Students**: Concise summaries.\n- **Founders**: CEO-ready updates."
+                    },
+                    {
+                        id: "2.3.2",
+                        title: "Asking for multiple options, then narrowing down",
+                        concepts: "Instead of one perfect answer, ask for multiple options. Avoids bias, explores creativity, and allows you to choose/refine the best version with follow-up prompts.",
+                        examples: "Step 1: “Give me 5 subject lines.”\nStep 2: “Pick top 2 based on clarity.”\nStep 3: “Rewrite best one to be more persuasive.”",
+                        visualization: "Decision tree: Options → Evaluate → Select → Improve. 5 ideas → 2 strong → 1 polished.",
+                        practical: "- **Marketing**: Headline options.\n- **HR**: JD titles.\n- **Sales**: Pitch lines.\n- **Students**: Essay intros."
+                    },
+                    {
+                        id: "2.3.3",
+                        title: "Getting AI to show its reasoning / outline before full answer",
+                        concepts: "Asking AI to 'think step-by-step' or give an outline first reduces hallucinations and mistakes. Helps you correct direction early before the full draft is written.",
+                        examples: "Step 1: “Give me a 6-point outline first.”\nStep 2: “Great, now write section 1 only.”\nStep 3: “Explain how you arrived at these insights.”",
+                        visualization: "Outline → Draft → Expanded Sections. Chain-of-thought bubbles. “Reasoning first, content second” diagram.",
+                        practical: "- **HR**: Outline interview kits.\n- **Founders**: Strategy docs.\n- **Ops**: SOP steps.\n- **Students**: Essay outlines."
+                    },
+                    {
+                        id: "2.3.4",
+                        title: "Using checklists and rubrics inside prompts",
+                        concepts: "Rubrics control quality by asking AI to evaluate content against standards (Accuracy, Clarity, Tone, etc.). Reduces bias and missing requirements.",
+                        examples: "**Email Review**: “Score this email on clarity, tone (1–10). Then rewrite to improve weak areas.”\n**JD Review**: “Evaluate using rubric: Completeness, Inclusivity, Clarity.”",
+                        visualization: "Rubric table: Criteria | Score | Notes. Checklist icons. Before vs after using rubric.",
+                        practical: "- **HR**: JD quality checks.\n- **Marketing**: Content scoring.\n- **Students**: Essay improvement.\n- **Ops**: Process checks."
+                    }
+                ],
+                quiz: [
+                    { question: "Which of these is NOT a common prompt constraint?", options: ["Tone", "Format", "Length", "Color of CPU"], answer: 3 },
+                    { question: "Why ask for multiple options first?", options: ["To waste tokens", "To explore creativity and avoid single-answer bias", "To confuse the AI", "To make the response longer"], answer: 1 },
+                    { question: "Asking AI to 'think step-by-step' is a technique to:", options: ["Slow down the AI", "Reduce hallucinations and improve reasoning", "Make the AI more emotional", "Save battery life"], answer: 1 },
+                    { question: "A 'rubric' in a prompt helps to:", options: ["Calculate math", "Standardize quality evaluation", "Translate languages", "Draw images"], answer: 1 },
+                    { question: "Adding an 'Audience' constraint (e.g., 'for a CEO') affects:", options: ["The response speed", "The tone and depth of the content", "The character limit only", "The AI's knowledge base"], answer: 1 }
+                ]
+            },
+            {
+                id: "2.4",
+                name: "Role-Specific AI Playbooks",
+                topic: "Functional Use Cases",
+                subtopic: "Playbook design",
+                details: [
+                    {
+                        id: "2.4.1",
+                        title: "Mapping 3–5 high-value workflows per function",
+                        concepts: "Identify repeatable, time-consuming workflows with clear steps/inputs per role. AI accelerates workflows like Sales follow-ups, HR hiring, or Ops SOPs.",
+                        examples: "**Sales**: Lead follow-up, Discovery prep.\n**HR**: Hiring, Onboarding checks.\n**Marketing**: Campaign planning.\n**Ops**: SOP creation, Reporting.",
+                        visualization: "Workflow map per department. Grid showing: Function | Workflow | Frequency | AI Use Case.",
+                        practical: "Build department-level playbooks and actionable templates."
+                    },
+                    {
+                        id: "2.4.2",
+                        title: "Converting each workflow into a sequence of prompts",
+                        concepts: "A workflow is a chain of prompts (Clarify, Generate, Rank, Rewrite). A standardized sequence reduces errors and improves quality across the team.",
+                        examples: "**Sales Flow**: Clarify offer → Generate 5 variations → Rank best → Rewrite tone → Format to email sequence.",
+                        visualization: "Prompt chain diagram: Step → Prompt Type → Output → Input to Next. Cards showing each step.",
+                        practical: "Standardize workflow automation and reduce rewrite time."
+                    },
+                    {
+                        id: "2.4.3",
+                        title: "Inputs and outputs at each step",
+                        concepts: "AI quality depends on input quality. Define clear inputs (e.g., meeting notes), expected output format (e.g., table), and quality constraints for every step.",
+                        examples: "| Step | Input | Output |\n| --- | --- | --- |\n| Extract needs | Manager notes | Role requirement list |\n| Create JD | Requirements | Final JD in 5 sections |",
+                        visualization: "IO (Input/Output) diagram. Table template for workflow design. Arrows showing transitions.",
+                        practical: "Define exact deliverables at each stage to ensure predictability."
+                    },
+                    {
+                        id: "2.4.4",
+                        title: "Example end-to-end playbook per function",
+                        concepts: "Complete playbooks for different roles (HR, Sales, Marketing, Ops) ensure that anyone in the organization can use AI effectively for their specific tasks.",
+                        examples: "HR: Extract → Organize → Draft JD → Bias Check → Polish.\nSales: Context → Draft → Critique Tone → Finalize.",
+                        visualization: "Step-by-step workflow diagrams for various roles. Playbook blueprints.",
+                        practical: "Deploy role-specific playbooks to your department to boost productivity."
+                    }
+                ],
+                quiz: [
+                    { question: "What is an AI 'Playbook'?", options: ["A game for AI", "A repeatable system made of prompts for a specific workflow", "A book about AI history", "A list of AI companies"], answer: 1 },
+                    { question: "Why map functional workflows?", options: ["To find high-ROI areas for AI automation", "To fire employees", "To write longer prompts", "To test the internet speed"], answer: 0 },
+                    { question: "An 'IO' diagram in a playbook shows:", options: ["Internet options", "Inputs and Outputs for each step", "Internal operations only", "Infinite loops"], answer: 1 },
+                    { question: "Which role would most likely use an 'Onboarding Checklist' playbook?", options: ["Sales", "HR", "Legal", "Engineering"], answer: 1 },
+                    { question: "The main goal of converting a workflow into a sequence of prompts is:", options: ["To make it more complicated", "To improve reliability and standardize quality", "To use more models", "To increase character count"], answer: 1 }
+                ]
+            },
+            {
+                id: "2.5",
+                name: "Using AI as Critic, Reviewer & Coach",
+                topic: "AI as Reviewer",
+                subtopic: "Review workflows",
+                details: [
+                    {
+                        id: "2.5.1",
+                        title: "Prompting AI to critique drafts instead of writing from scratch",
+                        concepts: "AI is more accurate when improving existing text. 'Critic mode' identifies clarity, tone, and missing context issues without inventing (hallucinating) new facts.",
+                        examples: "**Prompt**: “Critique this email for clarity. Do not rewrite. Only give feedback.”\n**Output**: “Tone is too informal. Missing call to action.”",
+                        visualization: "Before (raw email) → Critique notes → Improved version. Highlighter-style markup of weak areas.",
+                        practical: "- **HR**: Improve policy drafts.\n- **Marketing**: Copywriting checks.\n- **Sales**: Outreach emails."
+                    },
+                    {
+                        id: "2.5.2",
+                        title: "Review prompts: clarity, tone, structure, bias, completeness checks",
+                        concepts: "AI can act as a quality inspector across multiple categories: Clarity, Tone, Structure, Bias, and Completeness. Turns AI into a specialized auditor.",
+                        examples: "**Review JD**: “Review for clarity and gender bias. Give feedback in a table with severity (High/Med/Low).”",
+                        visualization: "Table-based reviewer output. Before vs after comparison. Color-coded feedback (Red/Yellow/Green).",
+                        practical: "- **HR**: Unbiased JDs.\n- **Marketing**: Campaign structure check.\n- **Founders**: Pitch decks."
+                    },
+                    {
+                        id: "2.5.3",
+                        title: "Asking AI to simulate different reviewers: manager, client, HR, legal",
+                        concepts: "AI can role-play as specific stakeholders (Manager: business impact, Client: trust, Legal: risk). Multi-angle feedback helps catch issues early.",
+                        examples: "1. “Pretend you’re an HR reviewer. Evaluate for compliance.”\n2. “Now act as a client. Does this proposal build trust?”",
+                        visualization: "Personas chart: Manager | Client | HR | Legal. Feedback overlay with varying perspectives.",
+                        practical: "- **Sales**: Client-focused messaging.\n- **Legal**: Risk checks.\n- **Founders**: Investor angle reviews."
+                    },
+                    {
+                        id: "2.5.4",
+                        title: "Iterating: Draft → Critique → Revise → Final version loop",
+                        concepts: "Best output comes from the 4-step loop: Draft → Critique → Revise → Final. Iteration produces polished results consistently.",
+                        examples: "Step 1: Raw report draft.\nStep 2: AI identifies gaps.\nStep 3: “Rewrite using your critique.”\nStep 4: “Polish tone for leadership.”",
+                        visualization: "Loop diagram: Draft → Critique → Revise → Final. Before/after comparison chart.",
+                        practical: "- **Managers**: Weekly reports.\n- **Sales**: Proposals.\n- **Students**: Finished essays."
+                    }
+                ],
+                quiz: [
+                    { question: "Why use 'Critic mode' instead of 'Generator mode' sometimes?", options: ["It's faster", "It reduces hallucinations by focusing on editing existing facts", "It uses less power", "AI doesn't like creating things"], answer: 1 },
+                    { question: "What does 'Bias' check in a review prompt look for?", options: ["Spelling errors", "Unfair assumptions or gendered language", "Word count", "Tone consistency"], answer: 1 },
+                    { question: "Simulating a 'Legal' reviewer focuses on:", options: ["Creativity", "Compliance and Risk Management", "Humor", "Marketing impact"], answer: 1 },
+                    { question: "The 4-step iteration loop ends with:", options: ["Critique", "Draft", "Final Refinement/Polish", "Deleting the file"], answer: 2 },
+                    { question: "Which reviewer persona would focus most on 'Business Outcomes'?", options: ["Client", "Manager", "Legal", "Junior Intern"], answer: 1 }
+                ]
+            },
+            {
+                id: "2.6",
+                name: "Guardrails, Mistakes & Safe Usage of Prompt Chains",
+                topic: "Risk & Governance",
+                subtopic: "Safe AI use",
+                details: [
+                    {
+                        id: "2.6.1",
+                        title: "Common failure modes: drift, contradictions, overfitting",
+                        concepts: "Chain risks include: Drift (tone shifts), Contradictions (Step 4 vs Step 2), Overfitting (copying examples too literally), and Loss of Context.",
+                        examples: "**Drift**: Formal JD becomes casual in later steps.\n**Contradiction**: One step targets 'CEOs' but the final step says 'ideal for students'.",
+                        visualization: "Flow chart showing where drift occurs. Red flags on steps where AI deviates. Before/after behavior charts.",
+                        practical: "- **Marketing**: Consistent messaging.\n- **HR**: Objective tone maintenance.\n- **Ops**: Conflict-free SOPs."
+                    },
+                    {
+                        id: "2.6.2",
+                        title: "Spotting when outputs go off-brief or off-brand",
+                        concepts: "AI might follow structure but miss Brand Voice or Objectives. Off-brief outputs hurt trust. Users must actively check for alignment with brand guidelines.",
+                        examples: "**Off-Brief**: Investor update that sounds 'too excited' or 'casual'.\n**Off-Brand**: Professional company voice appearing promotional or pushy.",
+                        visualization: "Brand voice sliders (Formal → Casual). Checklist overlay: Audience? Tone? Purpose?",
+                        practical: "- **Founders**: Investor comms.\n- **Sales**: Trust-based messaging.\n- **HR**: Neutral policy tone."
+                    },
+                    {
+                        id: "2.6.3",
+                        title: "Where to insert human review in a prompt chain",
+                        concepts: "Human review shouldn't be only at the end. Key points: After extraction (verify facts), After outline (check direction), and Before final sending.",
+                        examples: "**Report Flow**: 1. AI extracts -> 2. HUMAN verifies -> 3. AI outlines -> 4. HUMAN approves -> 5. AI drafts -> 6. HUMAN final sign-off.",
+                        visualization: "Traffic light system: Green (AI), Yellow (AI+Human), Red (Human only). Workflow with checkpoints.",
+                        practical: "- **Finance**: Verifying claims.\n- **HR**: Legal/Salary review.\n- **Legal**: Compliance sign-off."
+                    },
+                    {
+                        id: "2.6.4",
+                        title: "Simple personal rules for sensitive content, compliance, and approvals",
+                        concepts: "Set personal guardrails: Never let AI make legal/financial decisions. Verify all data/numbers. Stop if content involves health or HR disputes.",
+                        examples: "**Rule 1**: 'No AI content goes out without human sign-off.'\n**Rule 2**: 'Verify every single claim with a source.'",
+                        visualization: "Red warning icons for sensitive areas. Compliance checklist. Do/Don't table.",
+                        practical: "- **Finance**: Avoid false numbers.\n- **HR**: Prevent discriminatory language.\n- **Legal**: No invented claims."
+                    }
+                ],
+                quiz: [
+                    { question: "What is 'Drift' in a prompt chain?", options: ["The computer moving", "A slow shift away from the original goal or tone", "AI getting faster", "Generating a list"], answer: 1 },
+                    { question: "Why is 'Human-in-the-loop' important?", options: ["To make the AI feel supported", "To ensure accuracy, compliance, and strategic alignment", "To use more tokens", "To slow down the process"], answer: 1 },
+                    { question: "Which of these is a 'Red Flag' for AI output?", options: ["It uses a table", "It contradicts a previous step", "It is 200 words long", "It uses bullet points"], answer: 1 },
+                    { question: "A personal guardrule for Finance tasks should be:", options: ["Let AI decide the budget", "Always verify data and numbers manually", "Trust AI for all tax calculations", "Use high temperature for numbers"], answer: 1 },
+                    { question: "When should you stop using AI for a task?", options: ["If it takes more than 5 minutes", "If the task involves health risk, legal risk, or HR disputes", "If you feel tired", "If the AI uses a formal tone"], answer: 1 }
+                ]
+            },
+            {
+                id: "2.7",
+                name: "Week 2 Application & Reflection",
+                topic: "Practical Application",
+                subtopic: "Hands-on build",
+                details: [
+                    {
+                        id: "2.7.1",
+                        title: "Build 1 complete prompt playbook for a real workflow",
+                        concepts: "A playbook is a repeatable system. Map your inputs, ordered steps, critique points, and final format. Reduces task re-explanation and inconsistency.",
+                        examples: "**Sales Follow-Up Playbook**: Extract Context → Draft → Critique → Polish.\n**HR JD Playbook**: Extract → Organize → Draft → Bias Check → Polish.",
+                        visualization: "Workflow diagram: Input → Step → Output. Playbook blueprint (boxes and arrows).",
+                        practical: "- **HR**: Interview scheduling.\n- **Sales**: Lead prioritization.\n- **Marketing**: Content repurposing."
+                    },
+                    {
+                        id: "2.7.2",
+                        title: "Test it on at least 1 real work example end-to-end",
+                        concepts: "Testing reveals missing instructions, tone drift, and weak steps. Calibration is necessary for a reliable system.",
+                        examples: "**Testing Report Gen**: Workflow to create project update. Test output vs stakeholder needs.",
+                        visualization: "Example workflow test timeline. Before/after comparison. Test pass/fail matrix.",
+                        practical: "- **HR**: Test hiring workflow.\n- **Marketing**: Test campaign planning."
+                    },
+                    {
+                        id: "2.7.3",
+                        title: "Note what worked, what broke, and where you had to step in manually",
+                        concepts: "Reflect on hallucinations, missing data, and steps requiring human judgment. Reflection creates faster workflow improvement.",
+                        examples: "**Worked**: Summarized notes perfectly. **Broke**: Invented numbers. **Fix**: Add guardrail 'Do not invent details'.",
+                        visualization: "Red-green improvement chart. Failure point heatmap. Updated chain diagram.",
+                        practical: "- **PM**: Remove incorrect specs.\n- **Sales**: Identify off-brand messaging."
+                    },
+                    {
+                        id: "2.7.4",
+                        title: "Decide 1–2 workflows you want to upgrade with AI in the next month",
+                        concepts: "Choose high-repetition, time-consuming tasks with low compliance risk. Create a 30-day mastery plan.",
+                        examples: "HR: Candidate follow-up. Sales: Pipeline updates. Marketing: Social recycling.",
+                        visualization: "Impact vs Effort grid. 30-day AI roadmap. Priority matrix.",
+                        practical: "Build a personalized AI copilot routine and improve 1 workflow every 2 weeks."
+                    }
+                ],
+                quiz: [
+                    { question: "What is the benefit of a repeatable Playbook?", options: ["Saves time and ensures consistency", "It's colors are nice", "It uses the newest models automatically", "It replaces the need for humans"], answer: 0 },
+                    { question: "What should you do if AI 'breaks' a step by inventing info?", options: ["Give up", "Add a guardrail like 'Do not invent details'", "Restart the whole computer", "Use a shorter prompt"], answer: 1 },
+                    { question: "Which workflow is a 'High Impact' candidate for AI?", options: ["Rare, low-stakes emails", "Low-repetition tasks", "High-repetition, time-consuming, structured tasks", "Designing a one-time wedding card"], answer: 2 },
+                    { question: "Calibration during testing involves:", options: ["Checking the time", "Adjusting prompts based on observed errors or drift", "Changing your email address", "Buying a new mouse"], answer: 1 },
+                    { question: "The 'Impact vs Effort' grid helps you:", options: ["Draw better diagrams", "Prioritize which workflows to automate first", "Calculate your salary", "Find new AI tools"], answer: 1 }
+                ]
+            }
         ]
+
     },
     {
         id: 3,
