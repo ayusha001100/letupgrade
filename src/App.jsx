@@ -1,4 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { auth, db } from './firebase';
+import {
+  signInWithPopup,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signOut
+} from 'firebase/auth';
+import {
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc
+} from 'firebase/firestore';
+
 import { HashRouter as Router, Routes, Route, Navigate, Link, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -11,22 +25,47 @@ import { courseData } from './data/courseData';
 import './index.css';
 
 // --- Authentication Mock ---
+// --- Authentication Components ---
 const Login = ({ setUser }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const [error, setError] = useState(null);
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (email && password) {
-      const mockUser = {
-        name: email.split('@')[0],
-        email: email,
-        uid: 'mock-user-id'
+  const handleGoogleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Check if user exists in Firestore, if not create
+      const userDoc = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userDoc);
+
+      if (!userSnap.exists()) {
+        await setDoc(userDoc, {
+          name: user.displayName,
+          email: user.email,
+          uid: user.uid,
+          progress: {
+            completedWeeks: [],
+            completedModules: [],
+            quizScores: {}
+          },
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      const sessionUser = {
+        name: user.displayName,
+        email: user.email,
+        uid: user.uid,
+        photoURL: user.photoURL
       };
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+
+      setUser(sessionUser);
       navigate('/dashboard');
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Failed to sign in. Please try again.");
     }
   };
 
@@ -85,53 +124,47 @@ const Login = ({ setUser }) => {
         </div>
       </div>
 
-      {/* Right Side: Simple Login */}
+      {/* Right Side: Google Login */}
       <div className="auth-form-side" style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="glass-card"
-          style={{ width: '100%', maxWidth: '440px', padding: '48px', border: '1px solid var(--glass-border)' }}
+          style={{ width: '100%', maxWidth: '440px', padding: '48px', border: '1px solid var(--glass-border)', textAlign: 'center' }}
         >
           <div style={{ marginBottom: '40px' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '12px' }}>Login</h2>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '12px' }}>Welcome</h2>
             <p style={{ color: 'var(--text-muted)' }}>
-              Enter any Gmail and Password to access the program.
+              Sign in with Google to access the program and track your progress.
             </p>
           </div>
 
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Gmail</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', padding: '14px 18px', borderRadius: '12px', color: 'var(--text)', outline: 'none' }}
-                placeholder="you@gmail.com"
-              />
-            </div>
+          {error && <p style={{ color: '#ef4444', marginBottom: '20px', fontSize: '0.9rem' }}>{error}</p>}
 
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', padding: '14px 18px', borderRadius: '12px', color: 'var(--text)', outline: 'none' }}
-                placeholder="••••••••"
-              />
-            </div>
-
-            <button type="submit" className="btn-primary" style={{ padding: '16px', fontSize: '1.1rem' }}>
-              Enter Program
-            </button>
-          </form>
+          <button
+            onClick={handleGoogleLogin}
+            className="btn-primary"
+            style={{
+              width: '100%',
+              padding: '16px',
+              fontSize: '1.1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px'
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 48 48">
+              <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
+              <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
+              <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
+              <path fill="#1976D2" d="M43.611,20.083L43.595,20L24,20v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path>
+            </svg>
+            Sign in with Google
+          </button>
 
           <p style={{ marginTop: '32px', color: 'var(--text-muted)', fontSize: '0.8rem', lineHeight: '1.6', textAlign: 'center' }}>
-            Public access enabled for testing purposes.
+            By signing in, you agree to our Terms of Service.
           </p>
         </motion.div>
       </div>
@@ -882,16 +915,37 @@ const App = () => {
   const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    const savedProgress = localStorage.getItem('progress');
     const savedTheme = localStorage.getItem('theme') || 'dark';
-
-    if (savedUser) setUser(JSON.parse(savedUser));
-    if (savedProgress) setProgress(JSON.parse(savedProgress));
-
     setTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
-    setLoading(false);
+
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (fbUser) {
+        // Fetch user data and progress from Firestore
+        const userDoc = doc(db, 'users', fbUser.uid);
+        const userSnap = await getDoc(userDoc);
+
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          setUser({
+            name: fbUser.displayName,
+            email: fbUser.email,
+            uid: fbUser.uid,
+            photoURL: fbUser.photoURL
+          });
+          setProgress(userData.progress || {
+            completedWeeks: [],
+            completedModules: [],
+            quizScores: {}
+          });
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const toggleTheme = () => {
@@ -901,12 +955,19 @@ const App = () => {
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 
+  // Sync progress to Firestore when it changes
   useEffect(() => {
-    localStorage.setItem('progress', JSON.stringify(progress));
-  }, [progress]);
+    const syncProgress = async () => {
+      if (user?.uid) {
+        const userDoc = doc(db, 'users', user.uid);
+        await updateDoc(userDoc, { progress });
+      }
+    };
+    syncProgress();
+  }, [progress, user]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
+  const handleLogout = async () => {
+    await signOut(auth);
     setUser(null);
   };
 
